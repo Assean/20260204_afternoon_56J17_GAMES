@@ -41,6 +41,7 @@ if($handle=opendir('games')){
     <link rel="stylesheet" href="by/css/bootstrap.css">
     <script src="by/js/jquery-3.7.1.min.js"></script>
     <script>
+      // 顯示區塊script
       function receiveGameResult(data){
         $("#gameTitle").text(data.game)
         $("#gameStatus").text(data.data.result)
@@ -48,7 +49,6 @@ if($handle=opendir('games')){
         $("#resultBlock").removeClass("d-none")
         $("#resultBlock").addClass("d-block")
         console.log(data) 
-        // alert(data);
       }
       function openGame(url,title){
         window.open(url,title,'GameWindow','width=800,height=600')
@@ -63,6 +63,9 @@ if($handle=opendir('games')){
     <h1 class="text-center my-4">
       遊戲平台
     </h1>
+  <!-- 對應上方script
+           function receiveGameResult(data)
+  -->
     <div id="resultBlock" class="border rounded bg-success text-white p-3 d-none">
         <div>遊戲名稱:<span id="gameTitle"></span></div>
         <div>遊戲狀態:<span id="gameStatus"></span></div>
@@ -97,4 +100,5 @@ if($handle=opendir('games')){
 <?php include_once "footer.php";?>
 <script src="css/bootstrap.js"></script>
 </body>
+
 </html>
