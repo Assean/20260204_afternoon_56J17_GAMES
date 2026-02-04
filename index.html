@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>數字挑戰</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+      }
+      #numbers {
+        margin: 20px auto;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .number {
+        padding: 10px 20px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+      }
+      .number.clicked {
+        background-color: #d0e0fd;
+        border-color: #a0c1fd;
+      }
+      .badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>數字挑戰</h1>
+    <p>遊戲說明：依序點擊數字，按升序完成挑戰！</p>
+    <div id="numbers"></div>
+    <p id="result"></p>
+    <p>已花費時間：<span id="time-spent">0.00</span> 秒</p>
+    <button id="reset">重新開始</button>
+    <script>
+      const numbersContainer = document.getElementById("numbers");
+      const resultDisplay = document.getElementById("result");
+      const resetButton = document.getElementById("reset");
+      let timerInterval;
+      let startTime;
+      let clickedNumbers = [];
+
+      function startTimer() {
+        startTime = new Date().getTime();
+        timerInterval = setInterval(() => {
+          const currentTime = new Date().getTime();
+          const timeSpent = ((currentTime - startTime) / 1000).toFixed(2);
+          document.getElementById("time-spent").textContent = timeSpent;
+        }, 100);
+      }
+
+      function stopTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+
+      function resetGame() {
+        stopTimer();
+        document.getElementById("time-spent").textContent = "0.00";
+        numbersContainer.innerHTML = "";
+        resultDisplay.textContent = "";
+        clickedNumbers = [];
+
+        const numbers = Array.from({ length: 5 }, () =>
+          Math.floor(Math.random() * 100)
+        );
+
+        function updateBadge(div) {
+          const badge = document.createElement("div");
+          badge.className = "badge";
+          badge.textContent = clickedNumbers.length;
+          div.appendChild(badge);
+        }
+
+        numbers.forEach((num) => {
+          const div = document.createElement("div");
+          div.className = "number";
+          div.textContent = num;
+          div.onclick = () => {
+            if (!timerInterval) {
+              startTimer();
+            }
+            if (clickedNumbers.includes(num)) {
+              return;
+            }
+            clickedNumbers.push(num);
+            div.classList.add("clicked");
+            updateBadge(div);
+            checkOrder();
+          };
+          numbersContainer.appendChild(div);
+        });
+      }
+
+      function sendResultToParent(result, timeTaken) {
+        if (window.opener) {
+          window.opener.receiveGameResult({
+            game: "數字挑戰",
+            data: {
+              result: result,
+              time: timeTaken,
+            },
+          });
+          // alert(data);
+          window.close()
+        } else {
+          console.warn("無法傳送結果，請確認是否由主頁面開啟");
+        }
+      }
+
+      function checkOrder() {
+        const sortedNumbers = [...clickedNumbers].sort((a, b) => a - b);
+        if (clickedNumbers.join() === sortedNumbers.join()) {
+          if (clickedNumbers.length === numbersContainer.children.length) {
+            stopTimer();
+            const timeTaken = document.getElementById("time-spent").textContent;
+            resultDisplay.textContent = `挑戰成功！花費時間：${timeTaken} 秒`;
+            sendResultToParent("完成", timeTaken);
+          }
+        } else {
+          resultDisplay.textContent = "挑戰失敗，請重新嘗試！";
+          stopTimer();
+          disableInteraction();
+          resetButton.textContent = "重新開始";
+          clickedNumbers = [];
+          const timeTaken = document.getElementById("time-spent").textContent;
+          sendResultToParent("失敗", timeTaken);
+        }
+      }
+
+      function disableInteraction() {
+        numbersContainer.childNodes.forEach((block) => {
+          block.style.pointerEvents = "none";
+        });
+      }
+
+      resetButton.onclick = resetGame;
+
+      resetGame();
+    </script>
+  </body>
+</html>
